@@ -7,7 +7,7 @@ import Loader from './Loader';
 
 const AssignmentModal = ({ isOpen, onClose, complaint, onAssign }) => {
   const [staff, setStaff] = useState([]);
-  const [aiRecommendation, setAiRecommendation] = useState(null);
+  const [topThreeRecommendations, setTopThreeRecommendations] = useState([]);
   const [context, setContext] = useState('');
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
@@ -23,7 +23,7 @@ const AssignmentModal = ({ isOpen, onClose, complaint, onAssign }) => {
       setLoading(true);
       const response = await trainAPI.getAvailableStaff(complaint._id);
       setStaff(response.staff || []);
-      setAiRecommendation(response.recommendation || null);
+      setTopThreeRecommendations(response.topThree || []);
       setContext(response.context || '');
     } catch (error) {
       toast.error('Failed to fetch available staff');
@@ -50,11 +50,6 @@ const AssignmentModal = ({ isOpen, onClose, complaint, onAssign }) => {
     } finally {
       setAssigning(false);
     }
-  };
-
-  const handleAutoAssign = async () => {
-    if (!aiRecommendation) return;
-    await handleAssign(aiRecommendation.staffId._id);
   };
 
   if (!isOpen) return null;
@@ -106,8 +101,8 @@ const AssignmentModal = ({ isOpen, onClose, complaint, onAssign }) => {
               </div>
             ) : (
               <div className="space-y-6">
-                {/* AI Recommendation */}
-                {aiRecommendation && (
+                {/* Top 3 AI Recommendations */}
+                {topThreeRecommendations && topThreeRecommendations.length > 0 && (
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -119,64 +114,81 @@ const AssignmentModal = ({ isOpen, onClose, complaint, onAssign }) => {
                       </div>
                       <div className="flex-1">
                         <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                          AI Recommendation
-                          <span className="text-sm font-normal px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full">
-                            {aiRecommendation.score}% Match
-                          </span>
+                          Top 3 AI Recommendations
                         </h3>
                         <p className="text-gray-700 dark:text-gray-300 mt-1">
-                          Best match for this complaint
+                          Best matches for this complaint
                         </p>
                       </div>
                     </div>
 
-                    <div className="bg-white dark:bg-gray-800 p-4 rounded-lg mb-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <p className="font-bold text-lg text-gray-900 dark:text-white">
-                            {aiRecommendation.staffId.name}
-                          </p>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {aiRecommendation.staffId.specialization || 'General'}
-                          </p>
-                        </div>
-                        <Award className="h-8 w-8 text-yellow-500" />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3 mb-3">
-                        <div className="text-center p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                          <p className="text-xs text-gray-600 dark:text-gray-400">Match Score</p>
-                          <p className="text-lg font-bold text-purple-600 dark:text-purple-400">
-                            {aiRecommendation.score}%
-                          </p>
-                        </div>
-                        <div className="text-center p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                          <p className="text-xs text-gray-600 dark:text-gray-400">Confidence</p>
-                          <p className="text-lg font-bold text-green-600 dark:text-green-400">
-                            {aiRecommendation.confidence}
-                          </p>
-                        </div>
-                      </div>
-
-                      {aiRecommendation.reasons && aiRecommendation.reasons.length > 0 && (
-                        <div className="space-y-1">
-                          {aiRecommendation.reasons.map((reason, idx) => (
-                            <div key={idx} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
-                              <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
-                              <span>{reason}</span>
+                    <div className="space-y-3">
+                      {topThreeRecommendations.map((rec, idx) => (
+                        <div
+                          key={idx}
+                          className="bg-white dark:bg-gray-800 p-4 rounded-lg border-2 border-primary-200 dark:border-primary-700"
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                                idx === 0 ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-white' :
+                                idx === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800' :
+                                'bg-gradient-to-br from-orange-300 to-amber-400 text-gray-800'
+                              }`}>
+                                #{idx + 1}
+                              </span>
+                              <div>
+                                <p className="font-bold text-lg text-gray-900 dark:text-white">
+                                  {rec.staffId.name}
+                                </p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                  {rec.staffId.specialization || 'General'}
+                                </p>
+                              </div>
                             </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                            {idx === 0 && <Award className="h-8 w-8 text-yellow-500" />}
+                          </div>
 
-                    <button
-                      onClick={handleAutoAssign}
-                      disabled={assigning}
-                      className="w-full btn btn-primary bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-700 hover:to-purple-700 py-3 text-lg font-semibold"
-                    >
-                      {assigning ? 'Assigning...' : '✨ Auto-Assign (Recommended)'}
-                    </button>
+                          <div className="grid grid-cols-2 gap-2 mb-3">
+                            <div className="text-center p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                              <p className="text-xs text-gray-600 dark:text-gray-400">Match Score</p>
+                              <p className="text-lg font-bold text-purple-600 dark:text-purple-400">
+                                {rec.score}%
+                              </p>
+                            </div>
+                            <div className="text-center p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                              <p className="text-xs text-gray-600 dark:text-gray-400">Confidence</p>
+                              <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                                {rec.confidence}
+                              </p>
+                            </div>
+                          </div>
+
+                          {rec.reasons && rec.reasons.length > 0 && (
+                            <div className="space-y-1 mb-3">
+                              {rec.reasons.map((reason, reasonIdx) => (
+                                <div key={reasonIdx} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
+                                  <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                                  <span>{reason}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          <button
+                            onClick={() => handleAssign(rec.staffId._id)}
+                            disabled={assigning}
+                            className={`w-full btn py-2 text-sm font-semibold ${
+                              idx === 0 
+                                ? 'btn-primary bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-700 hover:to-purple-700'
+                                : 'bg-gray-600 hover:bg-gray-700 text-white'
+                            }`}
+                          >
+                            {assigning ? 'Assigning...' : idx === 0 ? '✨ Assign Best Match' : 'Assign'}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </motion.div>
                 )}
 
@@ -184,7 +196,7 @@ const AssignmentModal = ({ isOpen, onClose, complaint, onAssign }) => {
                 <div>
                   <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                     <User className="h-5 w-5" />
-                    All Available Staff ({staff.length})
+                    {topThreeRecommendations.length > 0 ? 'Other Available Staff' : 'All Available Staff'} ({staff.length})
                   </h3>
 
                   {staff.length === 0 ? (
@@ -196,46 +208,44 @@ const AssignmentModal = ({ isOpen, onClose, complaint, onAssign }) => {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {staff.map((member) => (
-                        <motion.div
-                          key={member._id}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          whileHover={{ scale: 1.02 }}
-                          className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${
-                            aiRecommendation?.staffId._id === member._id
-                              ? 'border-primary-400 dark:border-primary-600 bg-primary-50/50 dark:bg-primary-900/10'
-                              : 'border-gray-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-700'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                <p className="font-bold text-gray-900 dark:text-white">
-                                  {member.name}
-                                </p>
-                                {aiRecommendation?.staffId._id === member._id && (
-                                  <span className="px-2 py-1 bg-gradient-to-r from-purple-600 to-primary-600 text-white text-xs rounded-full font-medium">
-                                    ✨ AI Recommended
-                                  </span>
-                                )}
-                                {/* Availability Badge */}
-                                {member.availability && (
-                                  <span className={`px-2 py-1 text-xs rounded-full font-medium ${
-                                    member.availability === 'On Train' 
-                                      ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                                      : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                  }`}>
-                                    {member.availability === 'On Train' ? '🚂' : '📍'} {member.availability}
-                                  </span>
-                                )}
-                                {/* Train Info Badge */}
-                                {member.trainName && (
-                                  <span className="px-2 py-1 bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 text-xs rounded-full">
-                                    {member.trainName} #{member.trainNumber}
-                                  </span>
-                                )}
-                              </div>
+                      {staff.map((member) => {
+                        // Don't show staff that are already in top 3 recommendations
+                        const isInTopThree = topThreeRecommendations.some(
+                          rec => rec.staffId._id === member._id
+                        );
+                        if (isInTopThree) return null;
+
+                        return (
+                          <motion.div
+                            key={member._id}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            whileHover={{ scale: 1.02 }}
+                            className="p-4 border-2 rounded-xl cursor-pointer transition-all border-gray-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-700"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                  <p className="font-bold text-gray-900 dark:text-white">
+                                    {member.name}
+                                  </p>
+                                  {/* Availability Badge */}
+                                  {member.availability && (
+                                    <span className={`px-2 py-1 text-xs rounded-full font-medium ${
+                                      member.availability === 'On Train' 
+                                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                        : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                    }`}>
+                                      {member.availability === 'On Train' ? '🚂' : '📍'} {member.availability}
+                                    </span>
+                                  )}
+                                  {/* Train Info Badge */}
+                                  {member.trainName && (
+                                    <span className="px-2 py-1 bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 text-xs rounded-full">
+                                      {member.trainName} #{member.trainNumber}
+                                    </span>
+                                  )}
+                                </div>
                               
                               <div className="flex items-center gap-4 text-sm flex-wrap">
                                 {/* Specialization */}
@@ -277,7 +287,8 @@ const AssignmentModal = ({ isOpen, onClose, complaint, onAssign }) => {
                             </button>
                           </div>
                         </motion.div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>

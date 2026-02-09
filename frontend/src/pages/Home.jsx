@@ -148,11 +148,11 @@ const Home = () => {
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </Link>
                   </motion.div>
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                {/*   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                     <Link to="/sign-in" className="btn glass border-2 border-white/30 hover:bg-white/10 text-lg">
                       Sign In
                     </Link>
-                  </motion.div>
+                  </motion.div> */}
                 </>
               )}
             </motion.div>

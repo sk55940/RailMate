@@ -381,13 +381,15 @@ export const getAvailableStaff = async (req, res) => {
           };
         });
 
-        // Sort and get top recommendation
+        // Sort and get top 3 recommendations
         scoredStaff.sort((a, b) => b.score - a.score);
         const topRecommendation = scoredStaff[0];
+        const topThree = scoredStaff.slice(0, 3);
 
         return res.json({ 
           staff: availableStaff, 
           recommendation: topRecommendation,
+          topThree: topThree, // Top 3 AI recommendations
           context: context === 'train' ? `Train-based staff (${availableStaff[0]?.trainName || 'N/A'})` : 'Station staff'
         });
       }

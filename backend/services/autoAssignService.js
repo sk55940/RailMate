@@ -163,9 +163,13 @@ export const suggestStaffAssignment = async (complaintId) => {
     // Sort by score (highest first)
     scoredStaff.sort((a, b) => b.score - a.score);
 
+    // Get top 3 recommendations
+    const topRecommendations = scoredStaff.slice(0, 3);
+
     return {
       suggestions: scoredStaff,
       topPick: scoredStaff[0],
+      topThree: topRecommendations, // Top 3 AI recommendations
       message: `Found ${scoredStaff.length} eligible staff members`,
       context: {
         complaintType: complaint.locationType,
