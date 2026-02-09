@@ -74,27 +74,23 @@ app.use(notFound);
 // Error handler - must be last
 app.use(errorHandler);
 
-// Start server (Only for local development)
-// In production (Vercel), the app is exported and used as a serverless function
+// Start server
 const PORT = process.env.PORT || 5000;
 
-if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => {
-    console.log('='.repeat(50));
-    console.log(`🚂 RailMate Server Running`);
-    console.log(`📡 Port: ${PORT}`);
-    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🔗 URL: http://localhost:${PORT}`);
-    console.log('='.repeat(50));
-  });
+app.listen(PORT, () => {
+  console.log('='.repeat(50));
+  console.log(`🚂 RailMate Server Running`);
+  console.log(`📡 Port: ${PORT}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔗 URL: http://localhost:${PORT}`);
+  console.log('='.repeat(50));
+});
 
-  // Handle unhandled promise rejections
-  process.on('unhandledRejection', (err) => {
-    console.error('❌ Unhandled Rejection:', err);
-    // Close server & exit process
-    process.exit(1);
-  });
-}
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+  console.error('❌ Unhandled Rejection:', err);
+  // Close server & exit process
+  process.exit(1);
+});
 
-// Export the Express app for Vercel serverless functions
 export default app;
