@@ -52,7 +52,7 @@ export const createComplaint = async (req, res) => {
           if (!attachmentURL) attachmentURL = fileUrl;
         });
       }
-      
+
       // Handle videos
       if (req.files.videos) {
         req.files.videos.forEach(file => {
@@ -222,7 +222,7 @@ export const getComplaintById = async (req, res) => {
  */
 export const updateComplaintStatus = async (req, res) => {
   try {
-    const { status, remark } = req.body;
+    const { status, remark, proofOfWork, proofOfWorkNote } = req.body;
 
     const complaint = await Complaint.findById(req.params.id).populate('userId', 'name email');
 
@@ -245,6 +245,17 @@ export const updateComplaintStatus = async (req, res) => {
     if (status === 'Resolved') {
       complaint.resolvedBy = req.user._id;
       complaint.resolvedAt = new Date();
+      
+      // Handle proof of work image upload
+      if (req.file) {
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        complaint.proofOfWork = `/uploads/${req.file.filename}`;
+      } else if (proofOfWork) {
+        // Fallback for manual URL if provided
+        complaint.proofOfWork = proofOfWork;
+      }
+
+      if (proofOfWorkNote) complaint.proofOfWorkNote = proofOfWorkNote;
     }
 
     await complaint.save();
@@ -384,6 +395,17 @@ export const deleteComplaint = async (req, res) => {
  */
 export const getComplaintStats = async (req, res) => {
   try {
+    const daysStr = req.query.days;
+    let startDate;
+    
+    if (daysStr === 'all') {
+      startDate = new Date(0); // Beginning of time
+    } else {
+      const days = parseInt(daysStr) || 7;
+      startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+    }
+
     const stats = await Complaint.aggregate([
       {
         $facet: {
@@ -391,6 +413,20 @@ export const getComplaintStats = async (req, res) => {
           byCategory: [{ $group: { _id: '$category', count: { $sum: 1 } } }],
           byPriority: [{ $group: { _id: '$priority', count: { $sum: 1 } } }],
           bySentiment: [{ $group: { _id: '$sentiment', count: { $sum: 1 } } }],
+          byTrend: [
+            {
+              $match: {
+                createdAt: { $gte: startDate },
+              },
+            },
+            {
+              $group: {
+                _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+                count: { $sum: 1 },
+              },
+            },
+            { $sort: { _id: 1 } },
+          ],
         },
       },
     ]);

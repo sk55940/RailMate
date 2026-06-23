@@ -24,10 +24,21 @@ const ComplaintsList = () => {
     search: searchParams.get('search') || '',
     page: parseInt(searchParams.get('page')) || 1,
   });
+  const [searchTerm, setSearchTerm] = useState(filters.search);
 
   useEffect(() => {
     fetchComplaints();
   }, [filters]);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchTerm !== filters.search) {
+        handleFilterChange('search', searchTerm);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const fetchComplaints = async () => {
     try {
@@ -50,9 +61,6 @@ const ComplaintsList = () => {
       const response = await complaintAPI.getAll(params);
       setComplaints(response.data.complaints || []);
       setPagination(response.data.pagination || {});
-    } catch (error) {
-      console.error('Fetch complaints error:', error);
-      toast.error('Failed to load complaints');
     } finally {
       setLoading(false);
     }
@@ -77,12 +85,9 @@ const ComplaintsList = () => {
 
   const clearFilters = () => {
     setFilters({
-      status: '',
-      priority: '',
-      category: '',
-      search: '',
       page: 1,
     });
+    setSearchTerm('');
     setSearchParams({});
   };
 
@@ -156,8 +161,8 @@ const ComplaintsList = () => {
               <input
                 type="text"
                 placeholder="Search complaints..."
-                value={filters.search}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="input pl-10"
               />
             </div>

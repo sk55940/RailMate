@@ -70,7 +70,7 @@ router.delete('/:id', authorizeRoles('admin'), deleteComplaint);
  * @desc    Update complaint status
  * @access  Private (Staff, Admin)
  */
-router.put('/:id/status', authorizeRoles('staff', 'admin'), updateComplaintStatus);
+router.put('/:id/status', authorizeRoles('staff', 'admin'), upload.single('proofOfWork'), updateComplaintStatus);
 
 /**
  * @route   POST /api/complaints/:id/remarks

@@ -79,10 +79,7 @@ const About = () => {
               Our Mission
             </h2>
             <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed text-center max-w-4xl mx-auto">
-              To provide a seamless, efficient, and transparent platform for railway passengers to voice their 
-              concerns and for railway authorities to address them promptly. We leverage cutting-edge AI technology 
-              and modern web development practices to ensure every complaint receives the attention it deserves, 
-              ultimately improving the overall railway experience for millions of passengers.
+              Our goal is to make it easy for railway passengers to report problems. We use smart technology to help railway staff fix these issues quickly. We want to make traveling by train better for everyone.
             </p>
           </motion.div>
         </div>
@@ -164,68 +161,7 @@ const About = () => {
         </div>
       </section>
 
-      {/* Technology Stack */}
-      <section className="py-16 bg-gray-100 dark:bg-gray-800/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-              Built With Modern Technology
-            </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-400">
-              Powered by industry-leading tools and frameworks
-            </p>
-          </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8"
-          >
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-              <div className="p-4">
-                <div className="text-2xl font-bold text-primary-600 dark:text-primary-400 mb-2">React 18</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Frontend Framework</div>
-              </div>
-              <div className="p-4">
-                <div className="text-2xl font-bold text-primary-600 dark:text-primary-400 mb-2">Node.js</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Backend Runtime</div>
-              </div>
-              <div className="p-4">
-                <div className="text-2xl font-bold text-primary-600 dark:text-primary-400 mb-2">MongoDB</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Database</div>
-              </div>
-              <div className="p-4">
-                <div className="text-2xl font-bold text-primary-600 dark:text-primary-400 mb-2">Gemini</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">AI Analysis</div>
-              </div>
-              <div className="p-4">
-                <div className="text-2xl font-bold text-primary-600 dark:text-primary-400 mb-2">Clerk</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Authentication</div>
-              </div>
-              <div className="p-4">
-                <div className="text-2xl font-bold text-primary-600 dark:text-primary-400 mb-2">Tailwind CSS</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Styling</div>
-              </div>
-              <div className="p-4">
-                <div className="text-2xl font-bold text-primary-600 dark:text-primary-400 mb-2">Framer Motion</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Animations</div>
-              </div>
-              <div className="p-4">
-                <div className="text-2xl font-bold text-primary-600 dark:text-primary-400 mb-2">Express.js</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Web Framework</div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
 
       {/* Call to Action */}
       <section className="py-20">

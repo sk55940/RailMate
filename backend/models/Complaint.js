@@ -137,6 +137,16 @@ const complaintSchema = new mongoose.Schema(
         },
       },
     ],
+    // Proof of work
+    proofOfWork: {
+      type: String, // URL to image/document
+      trim: true,
+    },
+    proofOfWorkNote: {
+      type: String,
+      trim: true,
+      maxlength: 1000,
+    },
   },
   {
     timestamps: true,

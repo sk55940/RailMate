@@ -61,9 +61,14 @@ export const complaintAPI = {
   create: (data) => api.post('/complaints', data),
   update: (id, data) => api.put(`/complaints/${id}`, data),
   delete: (id) => api.delete(`/complaints/${id}`),
-  updateStatus: (id, status, remark) => api.put(`/complaints/${id}/status`, { status, remark }),
+  updateStatus: (id, data) => {
+    const isFormData = data instanceof FormData;
+    return api.put(`/complaints/${id}/status`, data, {
+      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : {},
+    });
+  },
   addRemark: (id, comment) => api.post(`/complaints/${id}/remarks`, { comment }),
-  getStats: () => api.get('/complaints/stats'),
+  getStats: (params) => api.get('/complaints/stats', { params }),
   getAIInsights: (id) => api.get(`/complaints/${id}/ai-insights`),
 };
 

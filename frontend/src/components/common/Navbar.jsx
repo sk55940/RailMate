@@ -251,7 +251,10 @@ const Navbar = () => {
                             onClick={() => {
                               if (!notification.readStatus) handleMarkAsRead(notification._id);
                               if (notification.complaintId) {
-                                navigate(`/complaints/${notification.complaintId}`);
+                                const complaintId = typeof notification.complaintId === 'object' 
+                                  ? notification.complaintId._id 
+                                  : notification.complaintId;
+                                navigate(`/complaints/${complaintId}`);
                                 setShowNotifications(false);
                               }
                             }}

@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { complaintAPI } from '../utils/api';
 import { 
   ArrowLeft, Clock, User, Calendar, MapPin, FileText, 
-  MessageSquare, Activity, Sparkles, Edit, Trash2, Brain, Zap, UserPlus, X 
+  MessageSquare, Activity, Sparkles, Edit, Trash2, Brain, Zap, UserPlus, X, CheckCircle, Upload
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Loader from '../components/common/Loader';
@@ -29,10 +29,12 @@ const ComplaintDetails = () => {
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [mediaType, setMediaType] = useState(null);
+  const [proofOfWorkFile, setProofOfWorkFile] = useState(null);
   const [updateData, setUpdateData] = useState({
     status: '',
     priority: '',
     remarks: '',
+    proofOfWorkNote: '',
   });
 
   useEffect(() => {
@@ -48,6 +50,7 @@ const ComplaintDetails = () => {
         status: response.data.status,
         priority: response.data.priority,
         remarks: '',
+        proofOfWorkNote: '',
       });
     } catch (error) {
       console.error('Fetch complaint error:', error);
@@ -62,8 +65,15 @@ const ComplaintDetails = () => {
     e.preventDefault();
     try {
       setUpdating(true);
-      // Use updateStatus API instead of update
-      await complaintAPI.updateStatus(id, updateData.status, updateData.remarks);
+      
+      const formData = new FormData();
+      formData.append('status', updateData.status);
+      formData.append('priority', updateData.priority);
+      if (updateData.remarks) formData.append('remark', updateData.remarks);
+      if (updateData.proofOfWorkNote) formData.append('proofOfWorkNote', updateData.proofOfWorkNote);
+      if (proofOfWorkFile) formData.append('proofOfWork', proofOfWorkFile);
+
+      await complaintAPI.updateStatus(id, formData);
       toast.success('Complaint updated successfully');
       setShowUpdateModal(false);
       // Refresh complaint details
@@ -345,6 +355,50 @@ const ComplaintDetails = () => {
               <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{complaint.description}</p>
             </motion.div>
 
+            {/* Proof of Work Display */}
+            {(complaint.proofOfWork || complaint.proofOfWorkNote) && (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.32 }}
+                className="card bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800"
+              >
+                <div className="flex items-center gap-2 mb-4">
+                  <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">Proof of Completion</h2>
+                </div>
+                
+                {complaint.proofOfWork && (
+                  <div className="mb-4">
+                    {(() => {
+                      const proofUrl = complaint.proofOfWork.startsWith('http') 
+                        ? complaint.proofOfWork 
+                        : complaint.proofOfWork.startsWith('/') ? complaint.proofOfWork : `/${complaint.proofOfWork}`;
+                      return (
+                        <img 
+                          src={proofUrl} 
+                          alt="Proof of Work" 
+                          className="w-full max-h-[400px] object-contain rounded-lg border border-green-200 dark:border-green-700 cursor-pointer hover:opacity-90 transition-opacity"
+                          onClick={() => {
+                            setSelectedMedia(proofUrl);
+                            setMediaType('image');
+                          }}
+                        />
+                      );
+                    })()}
+                  </div>
+                )}
+                
+                {complaint.proofOfWorkNote && (
+                  <div className="bg-white dark:bg-gray-800/50 p-4 rounded-lg border border-green-100 dark:border-green-900/30">
+                    <p className="text-sm text-gray-700 dark:text-gray-300 italic">
+                      "{complaint.proofOfWorkNote}"
+                    </p>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
             {/* Media Attachments - Admin & Staff Only */}
             {(user?.role === 'admin' || user?.role === 'staff') && (complaint.images?.length > 0 || complaint.videos?.length > 0 || complaint.attachmentURL) && (
               <motion.div 
@@ -365,7 +419,9 @@ const ComplaintDetails = () => {
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       {complaint.images.map((image, idx) => {
                         // Handle both full URLs and relative paths
-                        const imageUrl = image.startsWith('http') ? image : `http://localhost:5000${image}`;
+                        const imageUrl = image.startsWith('http') 
+                          ? image 
+                          : image.startsWith('/') ? image : `/${image}`;
                         return (
                           <button
                             key={idx}
@@ -395,7 +451,9 @@ const ComplaintDetails = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {complaint.videos.map((video, idx) => {
                         // Handle both full URLs and relative paths
-                        const videoUrl = video.startsWith('http') ? video : `http://localhost:5000${video}`;
+                        const videoUrl = video.startsWith('http') 
+                          ? video 
+                          : video.startsWith('/') ? video : `/${video}`;
                         return (
                           <div key={idx} className="relative group">
                             <video 
@@ -428,15 +486,22 @@ const ComplaintDetails = () => {
                 {complaint.attachmentURL && (
                   <div>
                     <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Attachment</h3>
-                    <a 
-                      href={complaint.attachmentURL.startsWith('http') ? complaint.attachmentURL : `http://localhost:5000${complaint.attachmentURL}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-lg hover:bg-primary-200 dark:hover:bg-primary-900/50 transition-colors"
-                    >
-                      <FileText className="h-4 w-4" />
-                      View Attachment
-                    </a>
+                    {(() => {
+                      const attachmentUrl = complaint.attachmentURL.startsWith('http') 
+                        ? complaint.attachmentURL 
+                        : complaint.attachmentURL.startsWith('/') ? complaint.attachmentURL : `/${complaint.attachmentURL}`;
+                      return (
+                        <a 
+                          href={attachmentUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-lg hover:bg-primary-200 dark:hover:bg-primary-900/50 transition-colors"
+                        >
+                          <FileText className="h-4 w-4" />
+                          View Attachment
+                        </a>
+                      );
+                    })()}
                   </div>
                 )}
               </motion.div>
@@ -685,6 +750,45 @@ const ComplaintDetails = () => {
                   placeholder="Add any notes or updates..."
                 />
               </div>
+
+              {(user?.role === 'staff' || user?.role === 'admin') && (
+                <div className="space-y-4 pt-2 border-t border-gray-200 dark:border-gray-700">
+                  <h4 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    Proof of Work
+                  </h4>
+                  <div>
+                    <label className="label !text-xs">Proof Image</label>
+                    <div className="mt-1 flex items-center justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-700 border-dashed rounded-xl hover:border-primary-500 transition-colors">
+                      <div className="space-y-1 text-center">
+                        <Upload className="mx-auto h-8 w-8 text-gray-400" />
+                        <div className="flex text-sm text-gray-600 dark:text-gray-400">
+                          <label className="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-primary-600 hover:text-primary-500 focus-within:outline-none">
+                            <span>{proofOfWorkFile ? proofOfWorkFile.name : 'Upload a file'}</span>
+                            <input
+                              type="file"
+                              className="sr-only"
+                              accept="image/*"
+                              onChange={(e) => setProofOfWorkFile(e.target.files[0])}
+                            />
+                          </label>
+                        </div>
+                        <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="label !text-xs">Completion Note</label>
+                    <textarea
+                      value={updateData.proofOfWorkNote || ''}
+                      onChange={(e) => setUpdateData({ ...updateData, proofOfWorkNote: e.target.value })}
+                      className="input w-full resize-none"
+                      rows={2}
+                      placeholder="Briefly describe what was done..."
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="flex items-center gap-3 pt-2">
                 <motion.button
